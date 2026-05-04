@@ -1,0 +1,36 @@
+name: Expo CI/CD
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🚀 Publish Update
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            eas update --branch production --message "Prod: ${{ github.event.head_commit.message }}"
+          else
+            eas update --branch staging --message "Staging: ${{ github.event.head_commit.message }}"
+          fi
