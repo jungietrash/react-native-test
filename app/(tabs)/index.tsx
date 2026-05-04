@@ -117,7 +117,7 @@ export default function HomeScreen() {
           {/* Header Section */}
           <View style={styles.header}>
             <ThemedText type="title" style={styles.mainTitle}>
-              Pocket Manager
+              My Savings Application
             </ThemedText>
             <View style={styles.tabBar}>
               <TouchableOpacity
