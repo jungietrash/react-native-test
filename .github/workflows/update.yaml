@@ -30,7 +30,7 @@ jobs:
       - name: 🚀 Publish Update
         run: |
           if [ "${{ github.ref_name }}" == "main" ]; then
-            eas update --branch production --message "Prod: ${{ github.event.head_commit.message }}"
+            eas update --branch production --message "PROD: ${{ github.event.head_commit.message }}"
           else
-            eas update --branch staging --message "Staging: ${{ github.event.head_commit.message }}"
+            eas update --branch staging --message "STAGING: ${{ github.event.head_commit.message }}"
           fi
