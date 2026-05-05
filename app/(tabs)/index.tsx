@@ -2,8 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { FlatList, Modal, SafeAreaView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import tw from "twrnc";
+import BudgetDetailScreen from "../screens/BudgetDetailScreen";
 import { Budget, BudgetCard } from "./components/BudgetCard";
-import BudgetDetailScreen from "./screens/BudgetDetailScreen";
 
 export default function App() {
   const [budgets, setBudgets] = useState<Budget[]>([]);

@@ -2,8 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { FlatList, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import tw from "twrnc";
-import { Budget } from "../components/BudgetCard"; // Ensure this path is correct
-import { ReceiptScanner } from "../components/ReceiptScanner"; // Ensure this is a Named Export
+import { Budget } from "../(tabs)/components/BudgetCard"; // Ensure this path is correct
+import { ReceiptScanner } from "../(tabs)/components/ReceiptScanner"; // Ensure this is a Named Export
 
 export default function BudgetDetailScreen({ budget, onBack, onUpdateBudget }: { budget: Budget, onBack: () => void, onUpdateBudget: (b: Budget) => void }) {
     const [isModalVisible, setModalVisible] = useState(false);
