@@ -1,67 +1,83 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { FlatList, Modal, SafeAreaView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 import tw from "twrnc";
-import BudgetDetailScreen from "../screens/BudgetDetailScreen";
-import { Budget, BudgetCard } from "./components/BudgetCard";
+import { Budget, BudgetCard } from "../../components/BudgetCard";
+import NewBudget from "../../components/modals/BudgetFormModal";
 
-export default function App() {
+export default function BudgetsScreen(): React.JSX.Element {
+  const router = useRouter();
+
+  // State Management
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
   const [isAddModalVisible, setAddModalVisible] = useState(false);
   const [newBudget, setNewBudget] = useState({ title: '', limit: '' });
 
-  const activeBudget = budgets.find(b => b.id === selectedBudgetId);
-
+  // Logic: Create Budget
   const createBudget = () => {
     if (!newBudget.title || !newBudget.limit) return;
-    const b: Budget = { id: Date.now().toString(), title: newBudget.title, limit: parseFloat(newBudget.limit), expenses: [] };
-    setBudgets([...budgets, b]);
+
+    const b: Budget = {
+      id: Date.now().toString(),
+      title: newBudget.title,
+      limit: parseFloat(newBudget.limit),
+      expenses: []
+    };
+
+    setBudgets([b, ...budgets]);
     setAddModalVisible(false);
     setNewBudget({ title: '', limit: '' });
   };
 
-  if (activeBudget) {
-    return <BudgetDetailScreen
-      budget={activeBudget}
-      onBack={() => setSelectedBudgetId(null)}
-      onUpdateBudget={(updated) => setBudgets(budgets.map(b => b.id === updated.id ? updated : b))}
-    />;
-  }
-
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
       <View style={tw`p-6`}>
-        <View style={tw`flex-row justify-between items-center mb-8`}>
-          <Text style={tw`text-4xl font-black text-gray-900`}>Budgets</Text>
-          <TouchableOpacity onPress={() => setAddModalVisible(true)} style={tw`bg-indigo-600 p-3 rounded-2xl`}>
-            <Ionicons name="add" size={28} color="white" />
+        {/* iOS Header Styling */}
+        <View style={tw`flex-row justify-between items-end mb-8`}>
+          <View>
+            <Text style={tw`text-gray-400 text-[11px] font-bold uppercase tracking-widest`}>My Savings</Text>
+            <Text style={tw`text-4xl font-black text-black tracking-tighter`}>Budgets</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setAddModalVisible(true)}
+            style={tw`bg-gray-100 p-2 rounded-full`}
+          >
+            <Ionicons name="add" size={28} color={tw.color('blue-500')} />
           </TouchableOpacity>
         </View>
 
         <FlatList
           data={budgets}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => setSelectedBudgetId(item.id)}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push({
+                pathname: "/budget/[id]",
+                params: { id: item.id, title: item.title, limit: item.limit }
+              })}
+              style={tw`mb-4`}
+            >
               <BudgetCard budget={item} />
             </TouchableOpacity>
           )}
-          ListEmptyComponent={<Text style={tw`text-center text-gray-400 mt-20`}>No budgets. Tap + to start.</Text>}
+          ListEmptyComponent={
+            <View style={tw`mt-20 items-center`}>
+              <Text style={tw`text-center text-gray-400 font-medium`}>No budgets. Tap + to start.</Text>
+            </View>
+          }
         />
       </View>
 
-      <Modal visible={isAddModalVisible} animationType="fade" transparent>
-        <View style={tw`flex-1 justify-center bg-black/50 p-6`}>
-          <View style={tw`bg-white p-8 rounded-3xl`}>
-            <Text style={tw`text-2xl font-black mb-6`}>New Wallet</Text>
-            <TextInput placeholder="Budget Title" style={tw`bg-gray-100 p-4 rounded-xl mb-4`} onChangeText={(t) => setNewBudget({ ...newBudget, title: t })} />
-            <TextInput placeholder="Monthly Limit" keyboardType="numeric" style={tw`bg-gray-100 p-4 rounded-xl mb-6`} onChangeText={(t) => setNewBudget({ ...newBudget, limit: t })} />
-            <TouchableOpacity style={tw`bg-indigo-600 p-4 rounded-xl items-center`} onPress={createBudget}>
-              <Text style={tw`text-white font-bold`}>Create</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {isAddModalVisible && <NewBudget isVisible={isAddModalVisible} onClose={() => setAddModalVisible(false)} newBudget={newBudget} setNewBudget={setNewBudget} onCreate={createBudget} />}
     </SafeAreaView>
   );
 }

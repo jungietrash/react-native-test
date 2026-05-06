@@ -1,37 +1,67 @@
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native';
+import tw from 'twrnc';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabLayout(): React.JSX.Element {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#4F46E5', // Indigo-600
+        tabBarInactiveTintColor: '#94A3B8', // Slate-400
         headerShown: false,
-        tabBarButton: HapticTab,
+        // Basic Apple design: Translucent tab bar
+        tabBarBackground: () => (
+          Platform.OS === 'ios' ? (
+            <BlurView intensity={80} style={tw`absolute inset-0`} />
+          ) : undefined
+        ),
+        tabBarStyle: {
+          position: 'absolute',
+          borderTopWidth: 0,
+          elevation: 0,
+          height: Platform.OS === 'ios' ? 88 : 65,
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : '#FFFFFF',
+        },
+        tabBarLabelStyle: tw`text-[11px] font-bold pb-1`,
       }}>
+
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Budgets',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "wallet" : "wallet-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
+
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Insights',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "stats-chart" : "stats-chart-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
-
-
     </Tabs>
   );
 }
