@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-// 1. Define the shape of individual objects
 interface Category {
     name: string;
     spent: number;
@@ -13,10 +12,10 @@ interface Transaction {
     amount: number;
     type: 'income' | 'expense';
     date: string;
-    category?: string; // Optional if you auto-categorize later
+    category: string;
+    ai_reply?: string; // Store the custom AI response here
 }
 
-// 2. Define the Store's State and Actions
 interface FinanceState {
     networth: number;
     monthlyBudget: number;
@@ -25,11 +24,10 @@ interface FinanceState {
     saveStreakMonths: number;
     categories: Category[];
     transactions: Transaction[];
-    // Actions
-    addTransaction: (text: string) => void;
+    // UPDATE: Interface now expects two arguments
+    addTransaction: (text: string, aiData: any) => void;
 }
 
-// 3. Apply the interface to the create function
 export const useFinanceStore = create<FinanceState>((set) => ({
     networth: 312400,
     monthlyBudget: 40000,
@@ -46,20 +44,23 @@ export const useFinanceStore = create<FinanceState>((set) => ({
 
     transactions: [],
 
-    addTransaction: (text: string) => {
-        const amountMatch = text.match(/\d+/g);
-        const amount = amountMatch ? parseInt(amountMatch.join('')) : 0;
+    // UPDATE: Implementation now uses aiData
+    addTransaction: (text: string, aiData: any) => {
+        const { price, category, reply } = aiData;
         const isPayday = text.toLowerCase().includes('payday');
+        const type = isPayday ? 'income' : 'expense';
 
         set((state) => {
-            const newSpend = isPayday ? state.currentSpend : state.currentSpend + amount;
-            const newNetworth = isPayday ? state.networth + amount : state.networth - amount;
+            const newSpend = type === 'expense' ? state.currentSpend + price : state.currentSpend;
+            const newNetworth = type === 'income' ? state.networth + price : state.networth - price;
 
             const newTransaction: Transaction = {
                 id: Math.random().toString(),
                 description: text,
-                amount,
-                type: isPayday ? 'income' : 'expense',
+                amount: price,
+                type: type,
+                category: category || 'General',
+                ai_reply: reply, // This makes the demo output show up in the chat!
                 date: new Date().toISOString(),
             };
 
@@ -67,6 +68,8 @@ export const useFinanceStore = create<FinanceState>((set) => ({
                 currentSpend: newSpend,
                 networth: newNetworth,
                 transactions: [newTransaction, ...state.transactions],
+                // Update buffer for the dashboard
+                bufferLeft: state.monthlyBudget - newSpend
             };
         });
     },

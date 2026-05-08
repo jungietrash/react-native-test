@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import * as SecureStore from 'expo-secure-store'
+import { createClient } from '@supabase/supabase-js';
+import * as SecureStore from 'expo-secure-store';
 import ws from 'ws'; // 1. Import the ws package
 
 const ExpoSecureStoreAdapter = {
@@ -15,7 +15,7 @@ const ExpoSecureStoreAdapter = {
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
