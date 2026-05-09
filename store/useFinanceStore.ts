@@ -9,95 +9,322 @@ export interface Transaction {
     date: string;
     category: string;
     ai_reply?: string;
+    created_at: string;
+}
+
+export interface Profile {
+    id: string;
+    networth: number;
+    monthly_budget: number;
+    save_streak_months: number;
+    updated_at: string;
 }
 
 interface FinanceState {
+    profile: Profile | null;
+
     networth: number;
     monthlyBudget: number;
     currentSpend: number;
     bufferLeft: number;
+
     transactions: Transaction[];
-    categories: { name: string; spent: number; color: string }[];
+
+    categories: {
+        name: string;
+        spent: number;
+        color: string;
+    }[];
+
+
     fetchInitialData: () => Promise<void>;
-    addTransaction: (text: string, aiData: any) => Promise<void>;
+
+    addTransaction: (
+        text: string,
+        aiData: any
+    ) => Promise<void>;
+
+    updateMonthlyBudget: (amount: number) => Promise<void>;
+
 }
 
 export const useFinanceStore = create<FinanceState>((set, get) => ({
+    profile: null,
+
     networth: 0,
-    monthlyBudget: 40000,
+    monthlyBudget: 100000,
     currentSpend: 0,
-    bufferLeft: 40000,
+    bufferLeft: 100000,
+
     transactions: [],
     categories: [],
 
     fetchInitialData: async () => {
-        const { data: txs, error } = await supabase
-            .from('transactions')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+            /**
+             * =========================
+             * GET LOGGED IN USER
+             * =========================
+             */
 
-        if (error) return console.error("Fetch error:", error.message);
+            const {
+                data: { user },
+                error: authError,
+            } = await supabase.auth.getUser();
 
-        if (txs) {
-            const totalSpend = txs
-                .filter(t => t.type === 'expense')
-                .reduce((sum, t) => sum + t.amount, 0);
+            if (authError || !user) {
+                console.error('Auth error:', authError?.message);
+                return;
+            }
 
-            const totalIncome = txs
-                .filter(t => t.type === 'income')
-                .reduce((sum, t) => sum + t.amount, 0);
+            /**
+             * =========================
+             * FETCH PROFILE
+             * =========================
+             */
 
-            // Calculate Save Streak (count months where income > expense)
-            // For now, let's count unique months in the transaction list
-            const uniqueMonths = new Set(txs.map(t => t.created_at.substring(0, 7))).size;
+            const { data: profile, error: profileError } =
+                await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
 
-            // Group categories for the progress bars
-            const categoryMap: Record<string, number> = {};
-            txs.filter(t => t.type === 'expense').forEach(tx => {
-                categoryMap[tx.category] = (categoryMap[tx.category] || 0) + tx.amount;
+            if (profileError) {
+                console.error(
+                    'Profile fetch error:',
+                    profileError.message
+                );
+            }
+
+            /**
+             * =========================
+             * FETCH USER TRANSACTIONS
+             * =========================
+             */
+
+            const { data: txs, error: txError } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', {
+                    ascending: false,
+                });
+
+            if (txError) {
+                console.error(
+                    'Transaction fetch error:',
+                    txError.message
+                );
+
+                return;
+            }
+
+            const transactions = txs || [];
+
+            /**
+             * =========================
+             * CURRENT MONTH FILTER
+             * =========================
+             */
+
+            const now = new Date();
+
+            const currentMonthTxs = transactions.filter((tx) => {
+                const txDate = new Date(tx.created_at);
+
+                return (
+                    txDate.getMonth() === now.getMonth() &&
+                    txDate.getFullYear() === now.getFullYear()
+                );
             });
 
-            const sortedCats = Object.keys(categoryMap).map(name => ({
-                name,
-                spent: categoryMap[name],
-                color: '#EBC351'
-            })).sort((a, b) => b.spent - a.spent);
+            /**
+             * =========================
+             * CALCULATIONS
+             * =========================
+             */
+
+            const totalSpend = currentMonthTxs
+                .filter((t) => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalIncome = currentMonthTxs
+                .filter((t) => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            /**
+             * =========================
+             * CATEGORY GROUPING
+             * =========================
+             */
+
+            const categoryMap: Record<string, number> = {};
+
+            currentMonthTxs
+                .filter((t) => t.type === 'expense')
+                .forEach((tx) => {
+                    categoryMap[tx.category] =
+                        (categoryMap[tx.category] || 0) +
+                        tx.amount;
+                });
+
+            const sortedCats = Object.keys(categoryMap)
+                .map((name) => ({
+                    name,
+                    spent: categoryMap[name],
+                    color: '#EBC351',
+                }))
+                .sort((a, b) => b.spent - a.spent);
+
+            /**
+             * =========================
+             * PROFILE VALUES
+             * =========================
+             */
+
+            const monthlyBudget =
+                profile?.monthly_budget || 100000;
+
+            const calculatedNetworth =
+                profile?.networth ??
+                totalIncome - totalSpend;
+
+            /**
+             * =========================
+             * UPDATE STORE
+             * =========================
+             */
 
             set({
-                transactions: txs,
+                profile,
+
+                transactions,
+
+                monthlyBudget,
+
+                networth: calculatedNetworth,
+
                 currentSpend: totalSpend,
-                bufferLeft: 40000 - totalSpend, // Assuming 40k is your target
-                networth: totalIncome - totalSpend,
+
+                bufferLeft: monthlyBudget - totalSpend,
+
                 categories: sortedCats,
             });
+        } catch (err) {
+            console.error('Finance store error:', err);
         }
     },
 
     addTransaction: async (text: string, aiData: any) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("No user found");
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+            throw new Error('No authenticated user');
+        }
+
+        /**
+         * =========================
+         * DETERMINE TYPE
+         * =========================
+         */
+
+        const isIncome =
+            text.toLowerCase().includes('payday') ||
+            text.toLowerCase().includes('salary') ||
+            text.toLowerCase().includes('income');
+
+        /**
+         * =========================
+         * INSERT TRANSACTION
+         * =========================
+         */
 
         const { data, error } = await supabase
             .from('transactions')
-            .insert([{
-                user_id: user.id,
-                description: text,
-                amount: aiData.price,
-                type: text.toLowerCase().includes('payday') ? 'income' : 'expense',
-                category: aiData.category || 'General',
-                ai_reply: aiData.reply,
-                created_at: new Date().toISOString()
-            }])
-            .select() // This is CRITICAL to get the saved row back
+            .insert([
+                {
+                    user_id: user.id,
+
+                    description: text,
+
+                    amount: aiData.price,
+
+                    type: isIncome ? 'income' : 'expense',
+
+                    category:
+                        aiData.category || 'General',
+
+                    ai_reply: aiData.reply,
+
+                    created_at:
+                        new Date().toISOString(),
+                },
+            ])
+            .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            throw error;
+        }
 
-        // Manually update the local state so the UI refreshes instantly
-        set((state) => ({
-            transactions: [data, ...state.transactions], // Prepend the new transaction
-            // Optional: Recalculate your networth/spend here too
-            currentSpend: data.type === 'expense' ? state.currentSpend + data.amount : state.currentSpend,
-        }));
-    }
+        /**
+         * =========================
+         * REFRESH STORE
+         * =========================
+         */
+
+        await get().fetchInitialData();
+    },
+
+    updateMonthlyBudget: async (amount: number) => {
+        try {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) {
+                throw new Error("No authenticated user");
+            }
+
+            const payload = {
+                id: user.id,
+                monthly_budget: amount,
+                updated_at: new Date().toISOString(),
+            };
+
+            const { data, error } = await supabase
+                .from("profiles")
+                .upsert(payload, {
+                    onConflict: "id",
+                })
+                .select()
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            set((state) => ({
+                monthlyBudget:
+                    data.monthly_budget,
+
+                bufferLeft:
+                    data.monthly_budget -
+                    state.currentSpend,
+
+                profile: {
+                    ...(state.profile || {}),
+                    ...data,
+                },
+            }));
+        } catch (err) {
+            console.error(
+                "Failed to update monthly budget:",
+                err
+            );
+        }
+    },
 }));

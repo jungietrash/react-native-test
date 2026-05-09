@@ -1,60 +1,39 @@
-import { createClient } from "@supabase/supabase-js";
-import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
-import "react-native-url-polyfill/auto";
+import { createClient } from '@supabase/supabase-js';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+import 'react-native-url-polyfill/auto';
 
-import ws from "ws";
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
-
-/**
- * Native storage
- */
 const ExpoSecureStoreAdapter = {
     getItem: (key: string) => SecureStore.getItemAsync(key),
-    setItem: (key: string, value: string) =>
-        SecureStore.setItemAsync(key, value),
+    setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
     removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
-/**
- * Web storage
- */
-const WebStorage = {
-    getItem: async (key: string) => {
-        if (typeof window === "undefined") return null;
-        return localStorage.getItem(key);
+// Create a dummy transport for the Node build environment
+// this prevents the "Node.js 20 detected" crash
+class SetUpEmptyWebSocket {
+    constructor() { }
+    send() { }
+    close() { }
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        storage: Platform.OS === 'web' ? undefined : ExpoSecureStoreAdapter as any,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
     },
-
-    setItem: async (key: string, value: string) => {
-        if (typeof window === "undefined") return;
-        localStorage.setItem(key, value);
+    global: {
+        // If the environment lacks WebSocket, use our dummy class
+        // This stops the Supabase Realtime crash during 'npx expo export'
+        fetch: global.fetch,
     },
-
-    removeItem: async (key: string) => {
-        if (typeof window === "undefined") return;
-        localStorage.removeItem(key);
-    },
-};
-
-export const supabase = createClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-        auth: {
-            storage:
-                Platform.OS === "web"
-                    ? WebStorage
-                    : ExpoSecureStoreAdapter,
-
-            autoRefreshToken: true,
-            persistSession: true,
-            detectSessionInUrl: false,
-        },
-
-        realtime: {
-            transport: ws as any,
-        },
-    }
-);
+    // Only inject a custom transport if global WebSocket is missing
+    realtime: typeof WebSocket === 'undefined' ? {
+        transport: SetUpEmptyWebSocket as any
+    } : undefined,
+});
