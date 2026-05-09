@@ -318,12 +318,8 @@ export default function ChatScreen() {
             tw`text-white text-2xl leading-9`,
             { fontFamily: "Heading" },
           ]}
-        >
-          Not{" "}
-          <Text style={tw`text-[#EBC351]`}>judging</Text>
-          … just{" "}
-          <Text style={tw`text-[#EBC351]`}>analyzing</Text>
-          {" "}your finances.
+        >track your
+          <Text style={tw`text-[#EBC351]`}> expenses</Text>
         </Text>
 
 
@@ -373,7 +369,7 @@ export default function ChatScreen() {
                 <Text
                   style={tw`text-[#EBC351] text-[10px] font-bold uppercase mb-1 tracking-widest`}
                 >
-                  FinAI Coach
+                  Financial Coach
                 </Text>
 
                 <Text
