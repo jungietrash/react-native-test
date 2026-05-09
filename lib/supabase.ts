@@ -1,21 +1,34 @@
-import { createClient } from '@supabase/supabase-js'
-import * as SecureStore from 'expo-secure-store'
-import ws from 'ws'; // 1. Import the ws package
+import { createClient } from '@supabase/supabase-js';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+import ws from 'ws'; //
 
 const ExpoSecureStoreAdapter = {
-    getItem: (key: string) => {
-        return SecureStore.getItemAsync(key)
+    getItem: async (key: string) => {
+        if (Platform.OS === 'web') {
+            return typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+        }
+        return SecureStore.getItemAsync(key);
     },
-    setItem: (key: string, value: string) => {
-        SecureStore.setItemAsync(key, value)
+    setItem: async (key: string, value: string) => {
+        if (Platform.OS === 'web') {
+            if (typeof window !== 'undefined') localStorage.setItem(key, value);
+        } else {
+            await SecureStore.setItemAsync(key, value);
+        }
     },
-    removeItem: (key: string) => {
-        SecureStore.deleteItemAsync(key)
+    removeItem: async (key: string) => {
+        if (Platform.OS === 'web') {
+            if (typeof window !== 'undefined') localStorage.removeItem(key);
+        } else {
+            await SecureStore.deleteItemAsync(key);
+        }
     },
-}
+};
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = "https://gjlgirgyyaujjsapeisv.supabase.co";
+const supabaseAnonKey = "sb_publishable_Bunl5ouET78wABgzDvZSgQ_qyaGR4bz";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -24,11 +37,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         persistSession: true,
         detectSessionInUrl: false,
     },
-    // 2. Add this realtime section
+    // Add this block to fix the Node.js 20 WebSocket error
     realtime: {
-        params: {
-            eventsPerSecond: 10,
-        },
-        transport: ws as any, // This tells Supabase to use 'ws' for WebSockets
+        transport: ws as any, //
     },
-})
+});
