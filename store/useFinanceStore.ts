@@ -231,10 +231,6 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
          * =========================
          */
 
-        const isIncome =
-            text.toLowerCase().includes('payday') ||
-            text.toLowerCase().includes('salary') ||
-            text.toLowerCase().includes('income');
 
         /**
          * =========================
@@ -252,7 +248,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
                     amount: aiData.price,
 
-                    type: isIncome ? 'income' : 'expense',
+                    type: aiData.type,
 
                     category:
                         aiData.category || 'General',

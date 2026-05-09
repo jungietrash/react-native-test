@@ -7,6 +7,7 @@ import QuickStatsGrid from "@/components/dashboard/QuickStatsGrid";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import BudgetModal from "@/components/modals/BudgetModal";
 import { useFinanceStore } from "@/store/useFinanceStore";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import React, {
   useCallback,
@@ -79,11 +80,40 @@ export default function Dashboard() {
   const stats = [
     {
       label: "Net Worth",
-      value: `₱${store.networth.toLocaleString()}`,
+      value: `₱${(store.networth || 0).toLocaleString()}`,
+      hint: "Total financial position",
+      icon: <Ionicons name="wallet-outline" size={20} color="#EBC351" />,
     },
     {
-      label: "Budget",
-      value: `₱${store.monthlyBudget.toLocaleString()}`,
+      label: "Budget Remaining",
+      value: `₱${Math.max(
+        (store.monthlyBudget || 0) - (store.currentSpend || 0),
+        0
+      ).toLocaleString()}`,
+      hint: "Available this month",
+      icon: <Ionicons name="cash-outline" size={20} color="#22C55E" />,
+    },
+    {
+      label: "Daily Spend",
+      value: `₱${Math.floor(
+        (store.currentSpend || 0) /
+        Math.max(new Date().getDate(), 1)
+      ).toLocaleString()}`,
+      hint: "Current spending pace",
+      icon: <Ionicons name="trending-up-outline" size={20} color="#F59E0B" />,
+    },
+    {
+      label: "Risk Level",
+      value:
+        (store.currentSpend || 0) >
+          (store.monthlyBudget || 0) * 0.9
+          ? "High"
+          : (store.currentSpend || 0) >
+            (store.monthlyBudget || 0) * 0.75
+            ? "Medium"
+            : "Low",
+      hint: "Overspending risk",
+      icon: <Ionicons name="warning-outline" size={20} color="#EF4444" />,
     },
   ];
 
@@ -101,9 +131,16 @@ export default function Dashboard() {
     setBudgetModal(false);
   };
 
+  const daysInMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0
+  ).getDate();
+
+  const dailySafeSpend = (store.monthlyBudget * 0.95) / daysInMonth;
+
   return (
-    <SafeAreaView
-      style={tw`flex-1 bg-black`}
+    <SafeAreaView style={tw`flex-1 bg-black`}
     >
       <ScrollView
         contentContainerStyle={tw`px-5 pt-5 pb-40`}
@@ -130,7 +167,7 @@ export default function Dashboard() {
           monthlyBudget={
             store.monthlyBudget
           }
-          dailySafeSpend={3000}
+          dailySafeSpend={Math.floor(dailySafeSpend)}
           onEditBudget={() => {
             setBudgetInput(
               store.monthlyBudget.toString()

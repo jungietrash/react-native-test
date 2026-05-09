@@ -1,54 +1,53 @@
-import { router } from "expo-router";
 import React from "react";
-import {
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { Text, View } from "react-native";
 import tw from "twrnc";
 
 export default function DashboardHeader() {
-    return (
-        <View
-            style={tw`flex-row justify-between items-center mb-8`}
-        >
-            <View>
-                <Text
-                    style={tw`text-gray-500 text-xs uppercase tracking-widest`}
-                >
-                    Budget Dashboard
-                </Text>
+    const now = new Date();
 
-                <Text
-                    style={[
-                        tw`text-white text-3xl mt-1`,
-                        {
-                            fontFamily: "Heading",
-                        },
-                    ]}
-                >
-                    {new Date().toLocaleString(
-                        "default",
-                        {
-                            month: "long",
-                            year: "numeric",
-                        }
-                    )}
-                </Text>
+    const monthYear = now.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+    });
+
+    const dayName = now.toLocaleString("default", {
+        weekday: "long",
+    });
+
+    return (
+        <View style={tw`mb-8`}>
+            {/* TOP ROW */}
+            <View style={tw`flex-row items-center justify-between`}>
+                <View>
+                    <Text style={tw`text-gray-500 text-[10px] uppercase tracking-widest`}>
+                        Financial Overview
+                    </Text>
+
+                    <Text
+                        style={[
+                            tw`text-white text-3xl mt-1`,
+                            { fontFamily: "Heading" },
+                        ]}
+                    >
+                        {monthYear}
+                    </Text>
+                </View>
+
+                {/* STATUS DOT */}
+                <View style={tw`items-end`}>
+                    <View style={tw`flex-row items-center`}>
+                        <View style={tw`w-2 h-2 bg-[#22C55E] rounded-full mr-2`} />
+                        <Text style={tw`text-gray-400 text-xs`}>
+                            Active
+                        </Text>
+                    </View>
+
+                    <Text style={tw`text-gray-600 text-[10px] mt-1`}>
+                        {dayName}
+                    </Text>
+                </View>
             </View>
 
-            <TouchableOpacity
-                onPress={() =>
-                    router.push("/chat")
-                }
-                style={tw`bg-[#EBC351] px-5 py-4 rounded-3xl`}
-            >
-                <Text
-                    style={tw`text-black font-black text-xs`}
-                >
-                    + ADD
-                </Text>
-            </TouchableOpacity>
         </View>
     );
 }

@@ -197,18 +197,18 @@ export default function ChatScreen() {
        * DEBUG
        */
 
-      console.log(
-        "STATUS:",
-        response.status
-      );
+      // console.log(
+      //   "STATUS:",
+      //   response.status
+      // );
 
       const raw =
         await response.text();
 
-      console.log(
-        "RAW:",
-        raw
-      );
+      // console.log(
+      //   "RAW:",
+      //   raw
+      // );
 
       let aiData;
 
@@ -221,10 +221,10 @@ export default function ChatScreen() {
         );
       }
 
-      console.log(
-        "AI:",
-        aiData
-      );
+      // console.log(
+      //   "AI:",
+      //   aiData
+      // );
 
       /**
        * SAVE
