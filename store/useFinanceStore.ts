@@ -1,19 +1,14 @@
+import { supabase } from '@/lib/supabase';
 import { create } from 'zustand';
 
-interface Category {
-    name: string;
-    spent: number;
-    color: string;
-}
-
-interface Transaction {
+export interface Transaction {
     id: string;
     description: string;
     amount: number;
     type: 'income' | 'expense';
     date: string;
     category: string;
-    ai_reply?: string; // Store the custom AI response here
+    ai_reply?: string;
 }
 
 interface FinanceState {
@@ -21,56 +16,88 @@ interface FinanceState {
     monthlyBudget: number;
     currentSpend: number;
     bufferLeft: number;
-    saveStreakMonths: number;
-    categories: Category[];
     transactions: Transaction[];
-    // UPDATE: Interface now expects two arguments
-    addTransaction: (text: string, aiData: any) => void;
+    categories: { name: string; spent: number; color: string }[];
+    fetchInitialData: () => Promise<void>;
+    addTransaction: (text: string, aiData: any) => Promise<void>;
 }
 
-export const useFinanceStore = create<FinanceState>((set) => ({
-    networth: 312400,
+export const useFinanceStore = create<FinanceState>((set, get) => ({
+    networth: 0,
     monthlyBudget: 40000,
-    currentSpend: 28400,
-    bufferLeft: 18200,
-    saveStreakMonths: 5,
-
-    categories: [
-        { name: 'Food delivery', spent: 9200, color: '#EBC351' },
-        { name: 'Bills', spent: 8100, color: '#EBC351' },
-        { name: 'Transport', spent: 4200, color: '#EBC351' },
-        { name: 'Subscriptions', spent: 3400, color: '#EBC351' },
-    ],
-
+    currentSpend: 0,
+    bufferLeft: 40000,
     transactions: [],
+    categories: [],
 
-    // UPDATE: Implementation now uses aiData
-    addTransaction: (text: string, aiData: any) => {
-        const { price, category, reply } = aiData;
-        const isPayday = text.toLowerCase().includes('payday');
-        const type = isPayday ? 'income' : 'expense';
+    fetchInitialData: async () => {
+        const { data: txs, error } = await supabase
+            .from('transactions')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-        set((state) => {
-            const newSpend = type === 'expense' ? state.currentSpend + price : state.currentSpend;
-            const newNetworth = type === 'income' ? state.networth + price : state.networth - price;
+        if (error) return console.error("Fetch error:", error.message);
 
-            const newTransaction: Transaction = {
-                id: Math.random().toString(),
-                description: text,
-                amount: price,
-                type: type,
-                category: category || 'General',
-                ai_reply: reply, // This makes the demo output show up in the chat!
-                date: new Date().toISOString(),
-            };
+        if (txs) {
+            const totalSpend = txs
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
 
-            return {
-                currentSpend: newSpend,
-                networth: newNetworth,
-                transactions: [newTransaction, ...state.transactions],
-                // Update buffer for the dashboard
-                bufferLeft: state.monthlyBudget - newSpend
-            };
-        });
+            const totalIncome = txs
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            // Calculate Save Streak (count months where income > expense)
+            // For now, let's count unique months in the transaction list
+            const uniqueMonths = new Set(txs.map(t => t.created_at.substring(0, 7))).size;
+
+            // Group categories for the progress bars
+            const categoryMap: Record<string, number> = {};
+            txs.filter(t => t.type === 'expense').forEach(tx => {
+                categoryMap[tx.category] = (categoryMap[tx.category] || 0) + tx.amount;
+            });
+
+            const sortedCats = Object.keys(categoryMap).map(name => ({
+                name,
+                spent: categoryMap[name],
+                color: '#EBC351'
+            })).sort((a, b) => b.spent - a.spent);
+
+            set({
+                transactions: txs,
+                currentSpend: totalSpend,
+                bufferLeft: 40000 - totalSpend, // Assuming 40k is your target
+                networth: totalIncome - totalSpend,
+                categories: sortedCats,
+            });
+        }
     },
+
+    addTransaction: async (text: string, aiData: any) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("No user found");
+
+        const { data, error } = await supabase
+            .from('transactions')
+            .insert([{
+                user_id: user.id,
+                description: text,
+                amount: aiData.price,
+                type: text.toLowerCase().includes('payday') ? 'income' : 'expense',
+                category: aiData.category || 'General',
+                ai_reply: aiData.reply,
+                created_at: new Date().toISOString()
+            }])
+            .select() // This is CRITICAL to get the saved row back
+            .single();
+
+        if (error) throw error;
+
+        // Manually update the local state so the UI refreshes instantly
+        set((state) => ({
+            transactions: [data, ...state.transactions], // Prepend the new transaction
+            // Optional: Recalculate your networth/spend here too
+            currentSpend: data.type === 'expense' ? state.currentSpend + data.amount : state.currentSpend,
+        }));
+    }
 }));
