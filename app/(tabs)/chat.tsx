@@ -2,9 +2,10 @@ import { useFinanceStore } from "@/store/useFinanceStore";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import React, {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -47,6 +48,20 @@ export default function ChatScreen() {
 
   useEffect(() => {
     fetchInitialData();
+  }, []);
+
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: { display: "none" },
+    });
+
+    return () => {
+      navigation.setOptions({
+        tabBarStyle: undefined,
+      });
+    };
   }, []);
 
   /**
@@ -282,29 +297,35 @@ export default function ChatScreen() {
         style={tw`px-6 pt-4 pb-2 flex-row justify-between items-center`}
       >
         <TouchableOpacity
-          onPress={() =>
-            router.push("/")
-          }
-          style={tw`p-2 -ml-2`}
+          onPress={() => router.back()}
+          style={tw`flex-row items-center`}
         >
           <Ionicons
             name="chevron-back"
-            size={28}
+            size={26}
             color="#EBC351"
           />
+
+          <Text
+            style={tw`text-[#EBC351] text-sm ml-1 font-semibold`}
+          >
+            Back
+          </Text>
         </TouchableOpacity>
 
         <Text
           style={[
-            tw`text-white text-2xl`,
-            {
-              fontFamily:
-                "Heading",
-            },
+            tw`text-white text-2xl leading-9`,
+            { fontFamily: "Heading" },
           ]}
         >
-          log it.
+          Not{" "}
+          <Text style={tw`text-[#EBC351]`}>judging</Text>
+          … just{" "}
+          <Text style={tw`text-[#EBC351]`}>analyzing</Text>
+          {" "}your finances.
         </Text>
+
 
         <View style={tw`w-8`} />
       </View>

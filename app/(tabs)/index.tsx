@@ -1,7 +1,6 @@
 import AIInsightCard from "@/components/dashboard/AIInsightCard";
 import CategoryBreakdown from "@/components/dashboard/CategoryBreakdown";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
 import HeroBudgetCard from "@/components/dashboard/HeroBudgetCard";
 import QuickStatsGrid from "@/components/dashboard/QuickStatsGrid";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
@@ -188,7 +187,7 @@ export default function Dashboard() {
         <RecentTransactions />
       </ScrollView>
 
-      <FloatingAddButton />
+      {/* <FloatingAddButton /> */}
 
       <BudgetModal
         visible={budgetModal}

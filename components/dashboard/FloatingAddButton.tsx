@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import tw from "twrnc";
 
 export default function FloatingAddButton() {
@@ -9,6 +9,11 @@ export default function FloatingAddButton() {
         <View
             style={tw`absolute bottom-8 right-6 items-center`}
         >
+            {/* Glow effect behind button */}
+            <View
+                style={tw`absolute w-16 h-16 bg-[#EBC351] opacity-20 rounded-full`}
+            />
+
             <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => router.push("/chat")}
@@ -25,6 +30,12 @@ export default function FloatingAddButton() {
                 <Ionicons name="add" size={26} color="black" />
             </TouchableOpacity>
 
+            {/* Label */}
+            <Text
+                style={tw`text-[10px] text-[#EBC351] mt-2 font-bold uppercase tracking-widest`}
+            >
+                Add
+            </Text>
         </View>
     );
 }
