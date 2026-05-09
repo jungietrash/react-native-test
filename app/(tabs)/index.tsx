@@ -84,7 +84,7 @@ export default function Dashboard() {
       icon: <Ionicons name="wallet-outline" size={20} color="#EBC351" />,
     },
     {
-      label: "Budget Remaining",
+      label: "Budget Left",
       value: `₱${Math.max(
         (store.monthlyBudget || 0) - (store.currentSpend || 0),
         0
