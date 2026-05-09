@@ -7,6 +7,7 @@ import QuickStatsGrid from "@/components/dashboard/QuickStatsGrid";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import BudgetModal from "@/components/modals/BudgetModal";
 import { useFinanceStore } from "@/store/useFinanceStore";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import React, {
   useCallback,
@@ -78,38 +79,41 @@ export default function Dashboard() {
 
   const stats = [
     {
-      label: "Net Position",
-      value: `₱${(store.networth || 0).toLocaleString()}`,
-      hint: "Assets - Expenses"
-    },
-    {
       label: "Net Worth",
-      value: `₱${store.networth.toLocaleString()}`,
+      value: `₱${(store.networth || 0).toLocaleString()}`,
+      hint: "Total financial position",
+      icon: <Ionicons name="wallet-outline" size={20} color="#EBC351" />,
     },
     {
-      label: "Budget Left",
-      value: `₱${Math.max((store.monthlyBudget || 0) - (store.currentSpend || 0), 0).toLocaleString()}`,
-      hint: "Remaining this month"
+      label: "Budget Remaining",
+      value: `₱${Math.max(
+        (store.monthlyBudget || 0) - (store.currentSpend || 0),
+        0
+      ).toLocaleString()}`,
+      hint: "Available this month",
+      icon: <Ionicons name="cash-outline" size={20} color="#22C55E" />,
     },
     {
-      label: "Burn Rate",
-      value: `₱${Math.floor((store.currentSpend || 0) / Math.max(new Date().getDate(), 1)).toLocaleString()}`,
-      hint: "Daily average spending"
-    },
-    {
-      label: "Forecast",
-      value: `₱${Math.floor(((store.currentSpend || 0) / Math.max(new Date().getDate(), 1)) * 30).toLocaleString()}`,
-      hint: "Projected monthly spend"
+      label: "Daily Spend",
+      value: `₱${Math.floor(
+        (store.currentSpend || 0) /
+        Math.max(new Date().getDate(), 1)
+      ).toLocaleString()}`,
+      hint: "Current spending pace",
+      icon: <Ionicons name="trending-up-outline" size={20} color="#F59E0B" />,
     },
     {
       label: "Risk Level",
       value:
-        (store.currentSpend || 0) > (store.monthlyBudget || 0) * 0.9
+        (store.currentSpend || 0) >
+          (store.monthlyBudget || 0) * 0.9
           ? "High"
-          : (store.currentSpend || 0) > (store.monthlyBudget || 0) * 0.75
+          : (store.currentSpend || 0) >
+            (store.monthlyBudget || 0) * 0.75
             ? "Medium"
             : "Low",
-      hint: "Budget health status"
+      hint: "Overspending risk",
+      icon: <Ionicons name="warning-outline" size={20} color="#EF4444" />,
     },
   ];
 

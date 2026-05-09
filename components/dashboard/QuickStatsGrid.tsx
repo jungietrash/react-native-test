@@ -3,27 +3,29 @@ import { View } from "react-native";
 import tw from "twrnc";
 import StatCard from "./StatCard";
 
-interface Props {
-    stats: {
-        label: string;
-        value: string;
-        green?: boolean;
-        red?: boolean;
-    }[];
+interface StatItem {
+    label: string;
+    value: string;
+    hint?: string;
+    icon?: React.ReactNode;
+    green?: boolean;
+    red?: boolean;
 }
 
-export default function QuickStatsGrid({
-    stats,
-}: Props) {
+interface Props {
+    stats: StatItem[];
+}
+
+export default function QuickStatsGrid({ stats }: Props) {
     return (
-        <View
-            style={tw`flex-row flex-wrap justify-between mb-2`}
-        >
+        <View style={tw`flex-row flex-wrap justify-between mb-2`}>
             {stats.map((stat, index) => (
-                <StatCard
+                <View
                     key={index}
-                    {...stat}
-                />
+                    style={tw`w-[48%] mb-4`}
+                >
+                    <StatCard {...stat} />
+                </View>
             ))}
         </View>
     );

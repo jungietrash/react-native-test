@@ -5,6 +5,8 @@ import tw from "twrnc";
 interface Props {
     label: string;
     value: string;
+    hint?: string;
+    icon?: React.ReactNode;
     green?: boolean;
     red?: boolean;
 }
@@ -12,22 +14,32 @@ interface Props {
 export default function StatCard({
     label,
     value,
+    hint,
+    icon,
     green,
     red,
 }: Props) {
     return (
         <View
-            style={tw`w-[48%] bg-[#161616] rounded-[28px] p-5 border border-[#232323] mb-4`}
+            style={tw`bg-[#161616] rounded-[28px] p-5 border border-[#232323]`}
         >
-            <Text
-                style={tw`text-gray-500 text-[10px] uppercase mb-3`}
-            >
-                {label}
-            </Text>
+            {/* HEADER */}
+            <View style={tw`flex-row items-center mb-3`}>
+                {icon ? (
+                    <View style={tw`mr-2`}>
+                        {icon}
+                    </View>
+                ) : null}
 
+                <Text style={tw`text-gray-500 text-[10px] uppercase`}>
+                    {label}
+                </Text>
+            </View>
+
+            {/* VALUE */}
             <Text
                 style={[
-                    tw`text-lg`,
+                    tw`text-lg font-bold`,
                     {
                         fontFamily: "Heading",
                         color: green
@@ -41,6 +53,13 @@ export default function StatCard({
             >
                 {value}
             </Text>
+
+            {/* HINT */}
+            {hint ? (
+                <Text style={tw`text-gray-600 text-[10px] mt-1`}>
+                    {hint}
+                </Text>
+            ) : null}
         </View>
     );
 }
