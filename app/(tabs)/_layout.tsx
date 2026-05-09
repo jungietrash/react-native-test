@@ -1,71 +1,35 @@
-// import { BlurView } from "expo-blur";
-// import { Tabs } from "expo-router";
-// import { SymbolView } from "expo-symbols";
-// import { Platform, StyleSheet } from "react-native";
+import { BlurView } from 'expo-blur';
+import { Tabs } from 'expo-router';
+import { Platform, StyleSheet } from 'react-native';
 
-// export default function TabLayout() {
-//   return (
-//     <Tabs
-//       screenOptions={{
-//         headerShown: false,
+export default function TabLayout() {
+    return (
+        <Tabs screenOptions={{
+            headerShown: false,
+            // Fixed height to ensure it matches the KeyboardAvoidingView offset
+            tabBarStyle: {
+                position: 'absolute',
+                height: 0,
+                bottom: -20,
+                borderTopWidth: 0, // Removes the harsh line for a cleaner look
+                elevation: 0,
+            },
+            tabBarBackground: () => (
+                <BlurView
+                    intensity={Platform.OS === 'ios' ? 80 : 100}
+                    style={StyleSheet.absoluteFill}
+                    tint="dark" // Changed to dark to match the black branding
+                />
+            ),
+            tabBarActiveTintColor: '#EBC351', // Gold Branding
+            tabBarInactiveTintColor: '#666666', // Muted Gray
+            tabBarLabelStyle: {
+                fontSize: 10,
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+            }
+        }}>
 
-//         // ✅ FIX: DO NOT set height: 0
-//         tabBarStyle: {
-//           position: "absolute",
-//           backgroundColor: "transparent",
-//           borderTopWidth: 0,
-//           elevation: 0,
-//           height: 70, // IMPORTANT: visible height
-//           paddingBottom: 10,
-//         },
-
-//         tabBarBackground: () => (
-//           <BlurView
-//             intensity={Platform.OS === "ios" ? 80 : 100}
-//             style={StyleSheet.absoluteFill}
-//             tint="dark"
-//           />
-//         ),
-
-//         tabBarActiveTintColor: "#EBC351",
-//         tabBarInactiveTintColor: "#666",
-
-//         tabBarLabelStyle: {
-//           fontSize: 10,
-//           fontWeight: "700",
-//           textTransform: "uppercase",
-//         },
-//       }}
-//     >
-//       {/* DASHBOARD */}
-//       <Tabs.Screen
-//         name="index"
-//         options={{
-//           title: "Dashboard",
-//           tabBarIcon: ({ color }) => (
-//             <SymbolView
-//               name="house.fill"
-//               tintColor={color}
-//               size={22}
-//             />
-//           ),
-//         }}
-//       />
-
-//       {/* CHAT */}
-//       <Tabs.Screen
-//         name="chat"
-//         options={{
-//           title: "AI Chat",
-//           tabBarIcon: ({ color }) => (
-//             <SymbolView
-//               name="message.fill"
-//               tintColor={color}
-//               size={22}
-//             />
-//           ),
-//         }}
-//       />
-//     </Tabs>
-//   );
-// }
+        </Tabs>
+    );
+}
