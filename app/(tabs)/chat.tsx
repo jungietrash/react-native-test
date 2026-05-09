@@ -76,7 +76,6 @@ export default function ChatScreen() {
         contentContainerStyle={tw`p-6 pt-10`}
         renderItem={({ item }) => (
           <View style={tw`mb-8`}>
-            {/* User Message */}
             <View style={tw`items-end mb-3`}>
               <View style={tw`bg-[#222] px-5 py-3 rounded-[20px] rounded-tr-none max-w-[80%]`}>
                 <Text style={tw`text-white text-base`}>{item.description}</Text>
