@@ -54,7 +54,7 @@ export default function HeroBudgetCard({
                 </View>
 
                 <View
-                    style={tw`bg-[#171717] px-4 py-3 rounded-2xl border border-[#252525]`}
+                    style={tw`bg-[#171717] px-4 py-3 rounded-2xl border border-[#252525] absolute top-0 right-0`}
                 >
                     <Text
                         style={tw`text-gray-500 text-[9px] uppercase`}

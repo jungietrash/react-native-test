@@ -78,12 +78,38 @@ export default function Dashboard() {
 
   const stats = [
     {
+      label: "Net Position",
+      value: `₱${(store.networth || 0).toLocaleString()}`,
+      hint: "Assets - Expenses"
+    },
+    {
       label: "Net Worth",
       value: `₱${store.networth.toLocaleString()}`,
     },
     {
-      label: "Budget",
-      value: `₱${store.monthlyBudget.toLocaleString()}`,
+      label: "Budget Left",
+      value: `₱${Math.max((store.monthlyBudget || 0) - (store.currentSpend || 0), 0).toLocaleString()}`,
+      hint: "Remaining this month"
+    },
+    {
+      label: "Burn Rate",
+      value: `₱${Math.floor((store.currentSpend || 0) / Math.max(new Date().getDate(), 1)).toLocaleString()}`,
+      hint: "Daily average spending"
+    },
+    {
+      label: "Forecast",
+      value: `₱${Math.floor(((store.currentSpend || 0) / Math.max(new Date().getDate(), 1)) * 30).toLocaleString()}`,
+      hint: "Projected monthly spend"
+    },
+    {
+      label: "Risk Level",
+      value:
+        (store.currentSpend || 0) > (store.monthlyBudget || 0) * 0.9
+          ? "High"
+          : (store.currentSpend || 0) > (store.monthlyBudget || 0) * 0.75
+            ? "Medium"
+            : "Low",
+      hint: "Budget health status"
     },
   ];
 
@@ -101,9 +127,16 @@ export default function Dashboard() {
     setBudgetModal(false);
   };
 
+  const daysInMonth = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+    0
+  ).getDate();
+
+  const dailySafeSpend = (store.monthlyBudget * 0.95) / daysInMonth;
+
   return (
-    <SafeAreaView
-      style={tw`flex-1 bg-black`}
+    <SafeAreaView style={tw`flex-1 bg-black`}
     >
       <ScrollView
         contentContainerStyle={tw`px-5 pt-5 pb-40`}
@@ -130,7 +163,7 @@ export default function Dashboard() {
           monthlyBudget={
             store.monthlyBudget
           }
-          dailySafeSpend={3000}
+          dailySafeSpend={Math.floor(dailySafeSpend)}
           onEditBudget={() => {
             setBudgetInput(
               store.monthlyBudget.toString()
