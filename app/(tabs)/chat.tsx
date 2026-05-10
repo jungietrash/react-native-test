@@ -305,12 +305,6 @@ export default function ChatScreen() {
             size={26}
             color="#EBC351"
           />
-
-          <Text
-            style={tw`text-[#EBC351] text-sm ml-1 font-semibold`}
-          >
-            Back
-          </Text>
         </TouchableOpacity>
 
         <Text
@@ -318,8 +312,8 @@ export default function ChatScreen() {
             tw`text-white text-2xl leading-9`,
             { fontFamily: "Heading" },
           ]}
-        >track your
-          <Text style={tw`text-[#EBC351]`}> expenses</Text>
+        >
+          <Text style={tw`text-[#EBC351]`}>log</Text> it
         </Text>
 
 
